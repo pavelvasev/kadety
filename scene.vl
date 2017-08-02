@@ -1,0 +1,235 @@
+import components.creative_points 1.0
+
+Scene {
+  id: film
+
+  property var total: 81
+
+  property var kstartpos: {
+    var res = [];
+    for (var i=0; i<9; i++)
+    for (var j=0; j<9; j++)
+      res.push( [j+1,i+1] );
+    return res;
+  }
+
+  property var kcolors: {
+    var res = [];
+    for (var i=0; i<9; i++)
+    for (var j=0; j<9; j++)
+      if (i == 4 || j == 4)
+        res.push( [1,0,0] );
+      else
+        res.push( [1,1,1] );
+    return res;
+  }
+
+  property var kstartpovorot: {
+    var res = [];
+    for (var i=0; i<9; i++)
+    for (var j=0; j<9; j++)
+      res.push( 270 );
+    return res;
+  }
+
+  ////////////////////////////////
+  RenderKadets2 {
+    curstage: film.curstage
+    id: sp
+    onClicked: kadet.value = index+1
+  }
+
+  /*
+  Param {
+    text: "Шаги"
+    values: {
+      r = [];
+      for (var i=0; i<stages.length; i++) {
+        r.push( " === " + stages[i].title );
+        for (var j=1; j<=stages[i].timelen; j++)
+          r.push( "  шаг "+j );
+      }
+      return r;  
+    }
+    id: tshag
+    onValueChanged: tparam.value = 	value
+  }
+  */
+
+  Param {
+    text: "Время"
+    min: 0
+    max: {
+      r=0;
+      for (var i=0; i<stages.length; i++) 
+        r += stages[i].timelen;
+      return r;
+      }
+    id: tparam
+// потом    step: 0.05
+  }
+
+  Param {
+    text: "Кадет"
+    min: 0
+    max: total
+    id: kadet
+    property var val: value-1
+  }
+
+  Spheres {
+    positions: sp.positions ? sp.positions.slice( kadet.val*3,kadet.val*3+3 ) : []
+    colors: [1,1,0]
+    radius: 2
+    opacity: 0.5
+  }  
+
+  ///////////////////////////////////
+
+  Stage {
+    id: stage
+    kstartpos: film.kstartpos
+    kstartpovorot: film.kstartpovorot
+    kcolors: film.kcolors
+
+    time: tparam.value-start
+    title: "Этап 1"
+  }
+
+  Stage {
+    id: stage2
+    property var prevstage: stage
+
+    start: prevstage.start + prevstage.timelen
+
+    kstartpos: prevstage.finkpos
+    kstartpovorot: prevstage.finkpovorot
+    kcolors: film.kcolors
+
+    time: tparam.value-start
+    title: "Этап 2"
+  }
+
+
+  Item {
+    id: stagesplace
+
+    Repeater {
+      model: thestages.length
+      id: rep
+      Stage {
+        property var prevstage: rep.$items[ index-1 ]
+        start: prevstage ? prevstage.start + prevstage.timelen : 0
+        kstartpos: prevstage ? prevstage.finkpos : film.kstartpos
+        kstartpovorot: prevstage ? prevstage.finkpovorot : film.kstartpovorot
+        kcolors: film.kcolors
+        time: tparam.value-start
+        title: thestages[index].title
+
+        groups: thestages[index].groups
+        program: thestages[index].program
+      }
+    }
+  }
+
+  
+  property var stages: {
+    return stagesplace.children.slice( 0, -1 );
+  }
+
+//  property var stages: [stage]
+
+  property var curstage: {
+    for (var i=0; i<stages.length; i++) 
+      if (stages[i].start <= tparam.value && stages[i].start + stages[i].timelen >= tparam.value) return stages[i];
+    
+    return stages[ stages.length-1 ] || stage;
+  }
+
+  Text {
+    y: 40
+    anchors.horizontalCenter: parent.horizontalCenter
+    font.pixelSize: 20
+
+    text: curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) )
+  }
+
+  text: ""
+
+  cameraPos:[50.67077112168084,37.81110168278806,46.2200407844477]
+  cameraCenter:[29.726218681811417,2.828851260832141,-14.823589669235645]
+  axes.visible: true
+
+  //// parse
+  DataParam {
+    guid: "proga"
+    file: Qt.resolvedUrl( "k1.txt")
+    TextLoader {
+      id: txt
+      file: parent.file
+    }
+  }
+
+  property var thestages: parse( txt.output )
+
+  function parse( txt ) {
+    var lines = txt.split("\n");
+    var accstage = {};
+    var res = [];
+
+    for (var i=0; i<lines.length; i++ ) {
+      var line = lines[i];
+      console.log(line);
+      var m = line.match(/#/);
+      if (m) continue;
+
+      m = line.match(/={3,} (.+)/);
+      if (m) {
+        if (Object.keys(accstage).length > 0) res.push( accstage );
+        accstage = { title: m[1], program: [], groups: accstage.groups || {} };
+        continue;
+      }
+
+      m = line.match(/(.+) = (.+)/);
+      if (m) {
+//        console.log("ggggg",m[2]);
+
+        accstage.groups[ m[1] ] = m[2].split(/[ ,]+/).map( function(v) { return parseInt(v); } );
+        continue;
+      }
+
+//      console.log("testing program");
+      m = line.match(/(.+) (с шага .+)/);
+//      console.log(m);
+      if (m) {
+        var target = m[1];
+        var cmd = m[2];
+
+//      { type: "shag", start: 3, target: "g1", value: 5 },
+//      { type: "povorot", start: 8, target: "g1", value: -90 },
+
+        var m2 = cmd.match(/с шага (\d+) движение ((\d|\.)+)/);
+        if (m2) {
+          var rec = { type: "shag", start: parseFloat(m2[1]), value: parseFloat(m2[2]), target: target };
+          accstage.program.push( rec );
+        }
+
+        m2 = cmd.match(/с шага (\d+) поворот (\S+)/);
+        if (m2) {
+          var rec = { type: "povorot", start: parseFloat(m2[1]), target: target };
+          if (m2[2] == "налево") rec.value = 90;
+          if (m2[2] == "направо") rec.value = -90;
+          if (m2[2] == "кругом") rec.value = 180;
+          accstage.program.push( rec );
+        }
+      }
+    }
+    if (Object.keys(accstage).length > 0) res.push( accstage );
+
+    console.log( res);
+
+    return res;
+  }
+
+
+}
