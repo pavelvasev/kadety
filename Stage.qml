@@ -53,18 +53,39 @@ Item {
 
 
 ///////////////////
+  function findkadetgroups( kdt ) {
+    kdt = kdt.toString();
+    var res = [];
+    for (var i in stage.groups)
+      if (stage.groups[i].indexOf(kdt) >= 0) res.push(i);
+    return res;
+  }
 
+  // выдать список актеров по цели
+  // цель = запись[,запись]
+  // запись = число|имягруппы
   function getkadetsfromtarget( tgt ) {
     var isInt = /^\+?\d+$/.test( tgt );
     if (isInt) return [ parseInt(tgt) ];
-    var sp = tgt.split(/[ ,]+/);
+
+    if (stage.groups[tgt]) return flatten( getkadetsfromtarget( stage.groups[tgt] ) );
+
+    var sp = Array.isArray(tgt) ? tgt : tgt.split(/[ ,]+/);
+
+    var kr = sp.indexOf("кроме");
+    if (kr > 0) {
+      var ok = getkadetsfromtarget( sp.slice( 0,kr ) );
+      var krome = getkadetsfromtarget( sp.slice( kr ) );
+      return ok.filter(function(i) {return krome.indexOf(i) < 0;});
+    }
+
+    // если не содержит запятых, и не целое число -- значит должна быть запись о группе
     if (sp.length > 1) {
-      //console.log("see split",sp);
       var res = sp.map( function(v) { return getkadetsfromtarget(v); } );
-      //console.log("got res",flatten( res ));
       return flatten( res );
     }
-    return stage.groups[tgt];
+
+    return [];
   }
 
   function flatten(arr) {
@@ -90,8 +111,7 @@ Item {
 
         //console.log(rec, lefttime, rectime );
         
-        if (rec.type == "shag") {
-          
+        if (rec.type == "shag") {          
           for (var k=0; k<kadets.length; k++) {
             var kadet = kadets[k] -1;
             //console.log( "shag kadeta provort=",respovorot[kadet] );
@@ -105,7 +125,12 @@ Item {
           for (var k=0; k<kadets.length; k++) {
             var kadet = kadets[k] -1;
             //console.log("povorot kadeta na",rec.value ); // * lefttime / rectime);
-            respovorot[kadet] = respovorot[kadet] + rec.value * lefttime / rectime;
+            if (rec.value == 1001) {              
+              respovorot[kadet] = respovorot[kadet] + (270- respovorot[kadet])* lefttime / rectime;
+              //console.log( "respovorot[kadet]===",respovorot[kadet]);
+            }
+            else
+              respovorot[kadet] = respovorot[kadet] + rec.value * lefttime / rectime;
           }
         }
     }

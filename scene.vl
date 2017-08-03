@@ -36,7 +36,7 @@ Scene {
   RenderKadets2 {
     curstage: film.curstage
     id: sp
-    onClicked: kadet.value = index+1
+    onClicked: { kadet.value = index+1; console.log( (index+1) +"," ); }
   }
 
   /*
@@ -66,7 +66,8 @@ Scene {
       return r;
       }
     id: tparam
-// потом    step: 0.05
+    step: 0.05
+    enableSliding: true
   }
 
   Param {
@@ -75,6 +76,10 @@ Scene {
     max: total
     id: kadet
     property var val: value-1
+  }
+  Text {
+    property var tag: "left"
+    text: curstage.findkadetgroups( kadet.value ).join(",")
   }
 
   Spheres {
@@ -161,7 +166,13 @@ Scene {
   axes.visible: true
 
   //// parse
+  Text {
+    property var tag: "left"
+    text: " "
+  }
+
   DataParam {
+    text: "Программа дефиле"
     guid: "proga"
     file: Qt.resolvedUrl( "k1.txt")
     TextLoader {
@@ -194,7 +205,7 @@ Scene {
       if (m) {
 //        console.log("ggggg",m[2]);
 
-        accstage.groups[ m[1] ] = m[2].split(/[ ,]+/).map( function(v) { return parseInt(v); } );
+        accstage.groups[ m[1] ] = m[2].split(/[ ,]+/).map( function(v) { return v; } );
         continue;
       }
 
@@ -214,12 +225,13 @@ Scene {
           accstage.program.push( rec );
         }
 
-        m2 = cmd.match(/с шага (\d+) поворот (\S+)/);
+        m2 = cmd.match(/с шага (\d+) поворот (\S+)( (\S+))?/);
         if (m2) {
-          var rec = { type: "povorot", start: parseFloat(m2[1]), target: target };
+          var rec = { type: "povorot", start: parseFloat(m2[1]), target: target, value: 0 };
           if (m2[2] == "налево") rec.value = 90;
           if (m2[2] == "направо") rec.value = -90;
           if (m2[2] == "кругом") rec.value = 180;
+          if (m2[2] == "на" && m2[4] == "зрителя") rec.value = 1001;
           accstage.program.push( rec );
         }
       }
