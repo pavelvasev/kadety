@@ -96,7 +96,7 @@ getUrlContents = function (url,skipErrorLogging) {
 jQuery("#samples").change( function(e) {
   var urla = jQuery( this ).val();
   if (urla == "0") return;
-  urla = formatSrc( urla ); // base.js
+  //urla = formatSrc( urla ); // base.js
   console.log( "loading urla..",urla );
   
   var cod = getUrlContents( urla, false );
