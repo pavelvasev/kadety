@@ -151,15 +151,6 @@ Scene {
     return stages[ stages.length-1 ] || stage;
   }
 
-  /*
-  Text {
-    y: 40
-    anchors.horizontalCenter: parent.horizontalCenter
-    font.pixelSize: 20
-
-    text: curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) )
-  }*/
-
   TextSprite {
     //centered: true
     texOffset: [-0.25, 0.25]
@@ -167,26 +158,6 @@ Scene {
     text: curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) )
     radius: 30
   }
-/*  Spheres {
-    positions: [25,20,-25]
-  }
-*/
-  /*
-  RenderTick {
-     onAction: {
-       var canvas = driverDomElement;
-       //var ctx = canvas.getContext("experimental-webgl");
-       var ctx = canvas.getContext("2d");
-       if (!ctx) {
-         //debugger;
-         return;
-       }
-       ctx.font = "30px Arial";
-       var txt = curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) );
-       ctx.fillText(txt,10,50);
-     }
-   }
-  */
 
   text: ""
 
@@ -204,9 +175,50 @@ Scene {
     text: "Программа дефиле"
     guid: "proga"
     file: Qt.resolvedUrl( "k1.txt")
+    id: dparam
     TextLoader {
       id: txt
       file: parent.file
+    }
+  }
+
+/*
+          Button {
+            property var tag: "left"
+            text: "Редактор"
+            property var urr: Qt.resolvedUrl("test-ace/1.html");
+            property var editorWindow
+            onClicked: {
+                    editorWindow = window.open( "about:blank","_blank", "width=700, height=700, top=100,left=100" );
+                    editorWindow.opener = window;
+                    editorWindow.document.location = urr;
+                    //editorWindow = window.open( urr );
+
+                    setTimeout( function() {
+                      editorWindow.postMessage( {"cmd":"init","code":txt.output},"*" );
+                    }, 500 );
+            }
+          }
+*/
+
+  Item {
+    Component.onCompleted: {
+      window.addEventListener("message", receiveMessage22, false);
+    }
+
+    // ловим сообщения..
+    function receiveMessage22(event) {
+        
+        var cmd = event.data.cmd;
+        var args = event.data.args;
+        console.log("!!!!",cmd);
+        if (cmd == "useprg") {
+          console.log("qqq");
+          dparam.files = [{ content: args[0] }];
+          //setFileProgress( "программа","получена",-1 );
+          setGuiProgress(100,"программа получена");
+          setTimeout( function() { setGuiProgress(-1); }, 300 );
+        }
     }
   }
 

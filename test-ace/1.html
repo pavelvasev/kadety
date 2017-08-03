@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ACE in Action</title>
+<style type="text/css" media="screen">
+    #editor { 
+        position: absolute;
+        top: 40px;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+    #runbtn {
+        position: absolute;
+        top: 10;
+        left: 10;
+        z-index: 10;
+    }
+</style>
+</head>
+<body>
+
+<button id="runbtn" onclick="run()">Запуск (ctrl+enter)</button>
+<div id="editor"></div>
+
+<script>
+window.onunload = function() { alert('Уже уходишь?'); };
+
+window.addEventListener('beforeunload', function(event) {
+        console.log('I am the 3rd one.');
+      });
+
+function sendcode() {
+  var code = editor.getValue();
+  var fra = window.opener;
+  fra.postMessage( {cmd:"useprg",args:[code]},"*");
+}
+
+function run() {
+   sendcode();
+//  reload();
+}
+
+    var initcode = "";
+    window.addEventListener("message", receiveMessage, false);
+    function receiveMessage(event)
+    {
+      //var origin = event.origin || event.originalEvent.origin; // For Chrome, the origin property is in the event.originalEvent object.
+      console.log("so event",event);
+      if (event.data.code) {
+        if (editor) editor.setValue( event.data.code ); // or session.setValue
+        else initcode = event.data.code;
+      }
+    }
+</script>
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.2.4/ace.js" type="text/javascript" charset="utf-8"></script>
+<script>
+    console.log("starting");
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.getSession().setMode("ace/mode/javascript");
+    editor.setValue( initcode );
+</script>
+</body>
+</html>
