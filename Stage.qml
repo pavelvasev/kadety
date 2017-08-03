@@ -46,9 +46,10 @@ Item {
     }
 
 
-  function getprogramlen(i) {
+  function getprogramlen(i) {    
     var rec = program[i];
-    return rec.time || ( rec.type == "shag" ? Math.ceil( rec.value ) : 1);;
+    return rec.time;
+    //return rec.time || ( rec.type == "shag" ? Math.ceil( rec.value ) : 1);
   }
 
 

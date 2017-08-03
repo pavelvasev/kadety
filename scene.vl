@@ -151,13 +151,42 @@ Scene {
     return stages[ stages.length-1 ] || stage;
   }
 
+  /*
   Text {
     y: 40
     anchors.horizontalCenter: parent.horizontalCenter
     font.pixelSize: 20
 
     text: curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) )
+  }*/
+
+  TextSprite {
+    //centered: true
+    texOffset: [-0.25, 0.25]
+    center: [25,20,-25]
+    text: curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) )
+    radius: 30
   }
+/*  Spheres {
+    positions: [25,20,-25]
+  }
+*/
+  /*
+  RenderTick {
+     onAction: {
+       var canvas = driverDomElement;
+       //var ctx = canvas.getContext("experimental-webgl");
+       var ctx = canvas.getContext("2d");
+       if (!ctx) {
+         //debugger;
+         return;
+       }
+       ctx.font = "30px Arial";
+       var txt = curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) );
+       ctx.fillText(txt,10,50);
+     }
+   }
+  */
 
   text: ""
 
@@ -221,19 +250,31 @@ Scene {
 
         var m2 = cmd.match(/с шага (\d+) движение ((\d|\.)+)/);
         if (m2) {
-          var rec = { type: "shag", start: parseFloat(m2[1]), value: parseFloat(m2[2]), target: target };
+          var time = parseFloat(m2[2]);
+          var rec = { type: "shag", start: parseFloat(m2[1]), value: parseFloat(m2[2]), target: target, time: time };
           accstage.program.push( rec );
         }
 
         m2 = cmd.match(/с шага (\d+) поворот (\S+)( (\S+))?/);
         if (m2) {
-          var rec = { type: "povorot", start: parseFloat(m2[1]), target: target, value: 0 };
+          var rec = { type: "povorot", start: parseFloat(m2[1]), target: target, value: 0, time: 1 };
           if (m2[2] == "налево") rec.value = 90;
           if (m2[2] == "направо") rec.value = -90;
           if (m2[2] == "кругом") rec.value = 180;
           if (m2[2] == "на" && m2[4] == "зрителя") rec.value = 1001;
           accstage.program.push( rec );
         }
+
+        /*
+        m2 = cmd.match(/МОЛОДЦЫ!/);
+        if (m2) {
+          var last = accstage.program[ accstage.program.length-1 ];
+          var st = last ? last.start + last.time : 0
+          var rec = { type: "ok", target: "", value: 0, time: 10, start: st };
+          accstage.program.push( rec );
+        }
+        */
+                
       }
     }
     if (Object.keys(accstage).length > 0) res.push( accstage );
