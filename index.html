@@ -1,1 +1,150 @@
-Hello!
+<html>
+<head>
+<meta charset="utf-8">
+<script
+  src="http://code.jquery.com/jquery-2.2.4.min.js"
+  integrity="sha256-BbhdlvQf/xTY9gja0Dq3HiwQF8LaCRTXxZKRutelT44="
+  crossorigin="anonymous"></script>
+ 
+
+</head>
+<body>
+<style>
+textarea { width: 800px; height: 200px; }
+iframe { width: 800px; height: 400px; }
+</style>
+<script>
+
+function send() {
+  var code = document.getElementById('txt').value;
+  event.target.contentWindow.postMessage( {cmd:"useprg",args:[code]},"*");
+}
+
+function reload() {
+  var fra = document.getElementById('fra');
+  //fra.contentWindow.location.reload(true);
+  fra.contentWindow.location.reload();
+}
+
+</script>
+
+<div id="leftpane">
+<div id="heading">
+Вьюланга
+</div>
+<div id="controls">
+Примеры:
+<select id="samples">
+<option value="0" >Свой код</option>
+<option value="k.txt" >Дефиле 1</option>
+<!--  
+<optgroup label="Простые">
+<option value="../examples/0_trivial/1-points.vl">3 точки</option>
+<option value="../examples/0_trivial/4-spheres-colors-all.vl">4 сферы</option>
+<option value="../examples/0_trivial/3-triangles-colored.vl">Треугольники</option>
+<option value="../examples/2_params/1-triangles-and-param.vl">Параметры</option>
+</optgroup>
+<optgroup label="Сложные">
+<option value="../examples/5_timer/clock/clock2.vl">Часы</option>
+  надо думать над каталогами
+<option value="https://github.com/pavelvasev/viewlang_setki/blob/master/v2/setka.vl">Сетка 1</option>
+
+</optgroup>
+-->  
+</select>
+&nbsp;
+<button onclick="send()">Запуск (ctrl+enter)</button>
+</div>
+<textarea id="txt" >
+123
+</textarea>
+</div>
+
+<iframe id="fra" src="http://viewlang.ru/code/scene.html?s=https://github.com/pavelvasev/kadety/blob/master/scene.vl" allowfullscreen> </iframe>
+
+<script>
+  document.getElementById("fra").addEventListener('load', function(event) {
+    // https://viget.com/extend/using-javascript-postmessage-to-talk-to-iframes
+    console.log("myframe is loaded - sensing message");
+    send();
+  });
+
+document.addEventListener('keydown', function(e) 
+{
+	if (((e.keyCode == 13) || (e.keyCode == 10)) && (e.ctrlKey == true)) send();
+});
+
+getUrlContents = function (url,skipErrorLogging) {
+    //console.log("getUrlContents",url);
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", url, false);
+    try {
+    xhr.send(null);
+    if (xhr.status != 200 && xhr.status != 0) { // 0 if accessing with file://
+        if (!skipErrorLogging)
+          console.log("Retrieving " + url + " failed: " + xhr.responseText, xhr);
+        return false; // which return values is better here? "" or false?
+    }
+    } catch (e) {
+       // it seems to be good idea to throw exception here in case skipErrorLogging is not set.
+       // because without exception, "" then goes to parser, and it failes with strange errors. 
+       if (!skipErrorLogging) 
+         throw e;
+       return false;
+    }
+    return xhr.responseText;
+}
+
+jQuery("#samples").change( function(e) {
+  var urla = jQuery( this ).val();
+  if (urla == "0") return;
+  urla = formatSrc( urla ); // base.js
+  console.log( "loading urla..",urla );
+  
+  var cod = getUrlContents( urla, false );
+  console.log( "loaded" );
+  jQuery( "#txt" ).val( cod );
+  send();
+});
+</script>
+
+<style>
+
+#leftpane {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 30%;
+    height: 95vh;
+}
+#txt {
+    width: 100%;
+    height: 100%;
+}
+#heading {
+    float: left;
+    margin: 5px;
+}
+#controls {
+    float:right;
+    margin: 4px;
+}
+#fra {
+    position: fixed;
+    top: 0px;
+    left: 30%; 
+    width: 70%;
+    height: 100vh;
+}
+
+
+</style>
+
+<!-- todo
+  * dir for github samples
+  * think on editor for any opened scene
+  * open scene to new window
+-->
+
+</body>
+</html>
