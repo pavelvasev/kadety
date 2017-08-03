@@ -17,7 +17,8 @@ iframe { width: 800px; height: 400px; }
 
 function send() {
   var code = document.getElementById('txt').value;
-  event.target.contentWindow.postMessage( {cmd:"useprg",args:[code]},"*");
+  var fra = document.getElementById('fra');
+  fra.contentWindow.postMessage( {cmd:"useprg",args:[code]},"*");
 }
 
 function reload() {
