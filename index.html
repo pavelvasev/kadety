@@ -1,46 +1,17 @@
+
 <html>
 <head>
 <meta charset="utf-8">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+ 
+<script src="http://viewlang.ru/code/depends/depends/jquery-2.1.4.js"></script>    
+
+<script src="http://viewlang.ru/code/base.js"></script>    
+
 </head>
 <body>
-	
-<style>
-textarea { width: 800px; height: 200px; }
-iframe { width: 800px; height: 400px; }
-	
-#leftpane {
-    position: fixed;
-    top: 0px;
-    left: 0px;
-    width: 30%;
-    height: 95vh;
-}
-#txt {
-    width: 100%;
-    height: 100%;
-}
-#heading {
-    float: left;
-    margin: 5px;
-}
-#controls {
-    float:right;
-    margin: 4px;
-}
-#fra {
-    position: fixed;
-    top: 0px;
-    left: 30%; 
-    width: 70%;
-    height: 100vh;
-}
-	
-</style>
-	
 <script>
 
-function send() {
+function run() {
   var code = document.getElementById('txt').value;
   var fra = document.getElementById('fra');
   fra.contentWindow.postMessage( {cmd:"useprg",args:[code]},"*");
@@ -54,50 +25,67 @@ function reload() {
 
 </script>
 
-<div id="leftpane">
-<div id="heading">
-Вьюланга
-</div>
 <div id="controls">
 Примеры:
 <select id="samples">
 <option value="0" >Свой код</option>
 <option value="k1.txt" >Дефиле 1</option>
-<!--  
-<optgroup label="Простые">
-<option value="../examples/0_trivial/1-points.vl">3 точки</option>
-<option value="../examples/0_trivial/4-spheres-colors-all.vl">4 сферы</option>
-<option value="../examples/0_trivial/3-triangles-colored.vl">Треугольники</option>
-<option value="../examples/2_params/1-triangles-and-param.vl">Параметры</option>
-</optgroup>
-<optgroup label="Сложные">
-<option value="../examples/5_timer/clock/clock2.vl">Часы</option>
-  надо думать над каталогами
-<option value="https://github.com/pavelvasev/viewlang_setki/blob/master/v2/setka.vl">Сетка 1</option>
-
-</optgroup>
--->  
 </select>
 &nbsp;
-<button onclick="send()">Запуск (ctrl+enter)</button>
-</div>
-<textarea id="txt" >
-123
-</textarea>
+<button onclick="run()">Запуск (ctrl+enter)</button>
 </div>
 
-<iframe id="fra" src="http://viewlang.ru/code/scene.html?s=https://github.com/pavelvasev/kadety/blob/master/scene.vl" allowfullscreen> </iframe>
+
+<div id="all">
+
+<textarea id="txt" class="split">
+Scene {
+
+Param {
+  id: xlen
+  text: "x limit "
+  value: 50
+}
+
+Linestrip {
+  positions: tri.positions
+  opacity: 0.25
+}
+
+Triangles {
+  id: tri
+  color: [1,0,0]
+  positions: {
+    var a=[];
+    var xlim = xlen.value;
+    for (var i=0; i<10000; i++) {
+      var x=Math.random()*xlim-xlim/2, y=Math.random()*10*Math.cos(x), z=Math.random()*10;
+      for (var j=0; j<3; j++) {
+        a.push( x+Math.random(10) );
+        a.push( y+Math.random(10) );
+        a.push( z+Math.random(10) ); 
+      }
+    }
+    return a;
+  }
+}
+
+}
+</textarea>
+<iframe id="fra" src="http://viewlang.ru/code/scene.html?s=https://github.com/pavelvasev/kadety/blob/master/scene.vl" allowfullscreen class="split"> </iframe>
+
+</div>
 
 <script>
   document.getElementById("fra").addEventListener('load', function(event) {
     // https://viget.com/extend/using-javascript-postmessage-to-talk-to-iframes
     console.log("myframe is loaded - sensing message");
-    send();
+	  run()
   });
 
 document.addEventListener('keydown', function(e) 
 {
-	if (((e.keyCode == 13) || (e.keyCode == 10)) && (e.ctrlKey == true)) send();
+	if (((e.keyCode == 13) || (e.keyCode == 10)) && (e.ctrlKey == true)) run();
 });
 
 getUrlContents = function (url,skipErrorLogging) {
@@ -124,18 +112,55 @@ getUrlContents = function (url,skipErrorLogging) {
 jQuery("#samples").change( function(e) {
   var urla = jQuery( this ).val();
   if (urla == "0") return;
-  //urla = formatSrc( urla ); // base.js
+  urla = formatSrc( urla ); // base.js
   console.log( "loading urla..",urla );
   
   var cod = getUrlContents( urla, false );
   console.log( "loaded" );
   jQuery( "#txt" ).val( cod );
-  send();
+  run();
 });
-jQuery("#samples").trigger("change");	
 </script>
 
 <style>
+
+#txt {
+  width: 100%;
+  height: 100%;
+}
+
+#fra {
+  width: 100%;
+  height: 100%;
+}
+
+.splitter-vertical > .splitter_bar {
+  width: 15px !important;
+  background-color: inherit;
+}
+
+.splitter_container > .splitter_panel {
+  overflow: visible !important;
+}
+
+.splitter_container > .splitter_panel > :not(.splitter_container) {
+  overflow: inherit !important;
+}
+
+#all {
+  /*height: 92vh;*/
+  height: auto;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  top: 35px;
+  position: absolute;
+}
+
+#controls {
+  padding-bottom: 5px;
+}
+
 </style>
 
 <!-- todo
@@ -143,6 +168,25 @@ jQuery("#samples").trigger("change");
   * think on editor for any opened scene
   * open scene to new window
 -->
+
+<script src="http://viewlang.ru/code/depends/enhslitter/split.js"></script>
+<link href="http://viewlang.ru/code/depends/enhslitter/style.css" rel="stylesheet"/>
+
+<!--
+<link rel="stylesheet" href="depends/codemirror/lib/codemirror.css">
+<script src="depends/codemirror/lib/codemirror.js"></script>
+-->
+
+<script>
+jQuery('#all').enhsplitter( {position: '30%'} );
+/*
+var myTextarea = document.getElementById("txt");
+var editor = CodeMirror.fromTextArea(myTextarea, {
+    lineNumbers: true,
+    lineWrapping: true
+  })
+*/
+</script>
 
 </body>
 </html>
