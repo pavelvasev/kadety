@@ -28,8 +28,8 @@ function reload() {
 <div id="controls">
 Примеры:
 <select id="samples">
-<option value="0" >Свой код</option>
 <option value="k1.txt" >Дефиле 1</option>
+<option value="0" >Свой код</option>	
 </select>
 &nbsp;
 <button onclick="run()">Запуск (ctrl+enter)</button>
@@ -39,38 +39,7 @@ function reload() {
 <div id="all">
 
 <textarea id="txt" class="split">
-Scene {
 
-Param {
-  id: xlen
-  text: "x limit "
-  value: 50
-}
-
-Linestrip {
-  positions: tri.positions
-  opacity: 0.25
-}
-
-Triangles {
-  id: tri
-  color: [1,0,0]
-  positions: {
-    var a=[];
-    var xlim = xlen.value;
-    for (var i=0; i<10000; i++) {
-      var x=Math.random()*xlim-xlim/2, y=Math.random()*10*Math.cos(x), z=Math.random()*10;
-      for (var j=0; j<3; j++) {
-        a.push( x+Math.random(10) );
-        a.push( y+Math.random(10) );
-        a.push( z+Math.random(10) ); 
-      }
-    }
-    return a;
-  }
-}
-
-}
 </textarea>
 <iframe id="fra" src="http://viewlang.ru/code/scene.html?s=https://github.com/pavelvasev/kadety/blob/master/scene.vl" allowfullscreen class="split"> </iframe>
 
@@ -120,6 +89,8 @@ jQuery("#samples").change( function(e) {
   jQuery( "#txt" ).val( cod );
   run();
 });
+	
+jQuery("#samples").trigger("change");
 </script>
 
 <style>
