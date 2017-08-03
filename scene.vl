@@ -232,21 +232,15 @@ Scene {
 
       m = line.match(/(.+) = (.+)/);
       if (m) {
-//        console.log("ggggg",m[2]);
-
         accstage.groups[ m[1] ] = m[2].split(/[ ,]+/).map( function(v) { return v; } );
         continue;
       }
 
-//      console.log("testing program");
       m = line.match(/(.+) (с шага .+)/);
-//      console.log(m);
+
       if (m) {
         var target = m[1];
         var cmd = m[2];
-
-//      { type: "shag", start: 3, target: "g1", value: 5 },
-//      { type: "povorot", start: 8, target: "g1", value: -90 },
 
         var m2 = cmd.match(/с шага (\d+) движение ((\d|\.)+)/);
         if (m2) {
@@ -265,17 +259,17 @@ Scene {
           accstage.program.push( rec );
         }
 
-        /*
-        m2 = cmd.match(/МОЛОДЦЫ!/);
-        if (m2) {
-          var last = accstage.program[ accstage.program.length-1 ];
-          var st = last ? last.start + last.time : 0
-          var rec = { type: "ok", target: "", value: 0, time: 10, start: st };
-          accstage.program.push( rec );
-        }
-        */
-                
+        continue;
       }
+
+      m = line.match(/пауза (\d+)?/);
+      if (m) {
+        var last = accstage.program[ accstage.program.length-1 ];
+        var st = last ? last.start + last.time : 0
+        var rec = { type: "pause", target: "", value: 0, time: 10, start: st };
+        accstage.program.push( rec );
+      }        
+
     }
     if (Object.keys(accstage).length > 0) res.push( accstage );
 
