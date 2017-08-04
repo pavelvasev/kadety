@@ -122,7 +122,7 @@ Item {
             respos[kadet][1] = newy;
           }
         }
-        if (rec.type == "povorot") {          
+        else if (rec.type == "povorot") {          
           for (var k=0; k<kadets.length; k++) {
             var kadet = kadets[k] -1;
             //console.log("povorot kadeta na",rec.value ); // * lefttime / rectime);
@@ -132,6 +132,14 @@ Item {
             }
             else
               respovorot[kadet] = respovorot[kadet] + rec.value * lefttime / rectime;
+          }
+        }
+        else if (rec.type == "rovno") {          
+          for (var k=0; k<kadets.length; k++) {
+            var kadet = kadets[k] -1;
+            respos[kadet][0] = Math.round( respos[kadet][0]*2 )/2
+            respos[kadet][1] = Math.round( respos[kadet][1]*2 )/2
+            respovorot[kadet] = Math.round( respovorot[kadet] / 15) * 15
           }
         }
     }

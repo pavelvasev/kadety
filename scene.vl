@@ -68,6 +68,8 @@ Scene {
     id: tparam
     step: 0.05
     enableSliding: true
+    property var animationPriority: 1
+    property var animationStep: 0.1
   }
 
   Param {
@@ -172,6 +174,7 @@ Scene {
   }
 
   DataParam {
+    visible: false
     text: "Программа дефиле"
     guid: "proga"
     file: Qt.resolvedUrl( "k1.txt")
@@ -248,27 +251,41 @@ Scene {
         continue;
       }
 
-      m = line.match(/(.+) (с шага .+)/);
+      m = line.match(/(.+) (с шага (\d+) (.+))/);
 
       if (m) {
         var target = m[1];
-        var cmd = m[2];
+        var cmd = m[4];
+        var start = parseFloat( m[3] );
 
-        var m2 = cmd.match(/с шага (\d+) движение ((\d|\.)+)/);
+        var m2 = cmd.match(/движение ((\d|\.)+)/);
         if (m2) {
-          var time = parseFloat(m2[2]);
-          var rec = { type: "shag", start: parseFloat(m2[1]), value: parseFloat(m2[2]), target: target, time: time };
+          var time = parseFloat(m2[1]);
+          var rec = { type: "shag", start: start, value: time, target: target, time: time };
           accstage.program.push( rec );
         }
 
-        m2 = cmd.match(/с шага (\d+) поворот (\S+)( (\S+))?/);
+        m2 = cmd.match(/поворот (\S+)( (\S+))?/);
         if (m2) {
-          var rec = { type: "povorot", start: parseFloat(m2[1]), target: target, value: 0, time: 1 };
-          if (m2[2] == "налево") rec.value = 90;
-          if (m2[2] == "направо") rec.value = -90;
-          if (m2[2] == "кругом") rec.value = 180;
-          if (m2[2] == "на" && m2[4] == "зрителя") rec.value = 1001;
+          var rec = { type: "povorot", start: start, target: target, value: 0, time: 1 };
+          if (m2[1] == "налево") rec.value = 90;
+          else if (m2[1] == "направо") rec.value = -90;
+          else if (m2[1] == "кругом") rec.value = 180;
+          else if (m2[1] == "на" && m2[3] == "зрителя") rec.value = 1001;
+          else rec.value = parseFloat( m2[1] );
           accstage.program.push( rec );
+        }
+
+        m2 = cmd.match(/выровняться/);
+        if (m2) {
+          var rec = { type: "rovno", start: start, target: target, value: 0, time: 1 };
+          accstage.program.push( rec );
+        }
+
+        m2 = cmd.match(/время ((\d|\.)+)/);
+        if (m2) {
+          var last = accstage.program[ accstage.program.length-1 ];
+          if (last) last.time = parseFloat( m2[1] );
         }
 
         continue;
@@ -278,9 +295,9 @@ Scene {
       if (m) {
         var last = accstage.program[ accstage.program.length-1 ];
         var st = last ? last.start + last.time : 0
-        var rec = { type: "pause", target: "", value: 0, time: 10, start: st };
+        var rec = { type: "pause", target: "", value: 0, time: parseFloat( m[1] || "10" ), start: st };
         accstage.program.push( rec );
-      }        
+      }
 
     }
     if (Object.keys(accstage).length > 0) res.push( accstage );
@@ -290,5 +307,45 @@ Scene {
     return res;
   }
 
+  Setka {
+    nx: 9
+    ny: 9
+  }
 
+  Text {
+    text: "Музыка"
+    property var tag: "left"
+  }
+
+  Audio {
+    src: Qt.resolvedUrl("kadet-marsh-minus.mp3")
+    property var tag: "left"
+    width: 200
+    id: marsh
+  }
+
+  Text {
+    text: " "
+    property var tag: "left"
+  }
+
+  Button {
+    width: 200
+    text: film.driverControls.movieDialog.processActive ? "СТОП" : "МАРШ С МУЗЫКОЙ"
+    property var tag: "left"
+    onClicked: {
+      if (film.driverControls.movieDialog.processActive) {
+        film.driverControls.movieDialog.stop();
+        marsh.htmlTag.pause();
+      }
+      else {
+        marsh.htmlTag.pause();
+        marsh.htmlTag.currentTime = 19.7;
+        marsh.htmlTag.play();
+
+        film.driverControls.movieDialog.prepare();
+        film.driverControls.movieDialog.gogo();
+      }
+    }
+  }
 }
