@@ -3,6 +3,7 @@ import components.creative_points 1.0
 Scene {
   id: film
 
+  // словарь имя -> информация-об-актере
   property var ai: { return {} }
 
   function initai() {
@@ -23,8 +24,15 @@ Scene {
   ////////////////////////////////
   RenderKadets4 {
     curstage: film.curstage
-    id: sp
-    onClicked: { kadet.value = index+1; console.log( (index+1) +"," ); }
+    id: arender
+    onClicked: { 
+      if (!tkadet.value) tkadet.value="";
+      if (tkadet.value.length > 0)
+        tkadet.value = tkadet.value + ","
+      tkadet.value = tkadet.value + index;
+      //console.log( (index) +"," ); 
+      //kadet.value = index+1; console.log( (index+1) +"," ); 
+    }
   }
 
   /*
@@ -60,28 +68,46 @@ Scene {
     property var animationStep: 0.1
   }
 
-/*
-  Param {
-    text: "Кадет"
-    values: Object.keys( curstage.start_ai )
-    id: kadet
+
+  TextParam {
+    text: "Кадеты"
+    id: tkadet
+    //property var arr: value.split(/[, ]+/)
+    Button {
+      text: "X"
+      onClicked: tkadet.value="";
+      //property var tag: "left"
+    }
+    Component.onCompleted: {
+      textInput.dom.firstChild.autocomplete="on";
+      //debugger;
+    }
   }
+ 
 
   Text {
     property var tag: "left"
     //text: curstage.findkadetgroups( kadet.value ).join(",")
-    text: kadet.value
+    //text: kadet.value
   }
-*/
 
-  /*
+  
   Spheres {
-    positions: sp.positions ? sp.positions.slice( kadet.val*3,kadet.val*3+3 ) : []
-    colors: [1,1,0]
+    positions: {      
+      var res = [];
+      var kadets = curstage.getkadetsfromtarget( tkadet.value )
+      //console.log( "got kadets=",kadets);
+      for (var k in kadets) {
+        var actor = curstage.ai[ kadets[k] ];
+        if (actor) res = res.concat( arender.actorxyz( actor ) );
+      }
+      return res;
+    }
+    color: [1,1,0]
     radius: 2
     opacity: 0.5
   }
-  */
+  
 
   ///////////////////////////////////
 

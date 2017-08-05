@@ -1,4 +1,18 @@
 Item {
+  id: item
+
+  SceneMouseEvents {
+    onDoubleClicked: {
+      for (var i=0; i<rep.$items.length; i++) {
+        var sp = rep.$items[i];
+        var r = sp.intersect( sceneMouse, 1 );
+        if (r) {
+          item.clicked( sp.actor_name );
+          break;
+        }
+      }
+    }
+  }
 
   signal clicked( object index );
 
@@ -9,15 +23,20 @@ Item {
   
   property var curstage
 
+  function actorxyz( actor ) {
+    return [actor.pos[0] *5, 0, actor.pos[1]* (-5)]
+  }
+
   Repeater {
     model: Object.keys( curstage.start_ai ).length
+    id: rep
 
     Trimesh {
       property var actor_name: Object.keys( curstage.start_ai )[ index ]
       property var actor: curstage.ai[ actor_name ]
 
       positions: [0,0,0]
-      center: [ actor.pos[0] *5, 0, actor.pos[1]* (-5) ]
+      center: actorxyz( actor )
       color: actor.color
 
       scale: 3
