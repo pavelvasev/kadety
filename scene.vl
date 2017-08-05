@@ -21,7 +21,7 @@ Scene {
   }
 
   ////////////////////////////////
-  RenderKadets3 {
+  RenderKadets4 {
     curstage: film.curstage
     id: sp
     onClicked: { kadet.value = index+1; console.log( (index+1) +"," ); }
