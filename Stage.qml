@@ -15,17 +15,19 @@ Item {
       { type: "shag", start: 10, target: "g1", value: 5 }
     ]
 
+  
+  property var start_ai
 
-  property var total: kstartpos.length
+  property var final_ai: evalpos( stage.timelen );
+  property var ai: evalpos( stage.time );
 
-  property var kstartpos: []
-  property var kcolors: []
-  property var kstartpovorot: []
+  
 
   ////////////////////////////////
 
   function process() {
     var res = [];
+//    var total = 
     for (var i=0; i<total; i++) {
       var p = f( i );
       res = res.concat( p );
@@ -39,19 +41,11 @@ Item {
   property var timelen: {
       var t = 0;
       for (var i=0; i<program.length; i++) {
-        var q = program[i].start + getprogramlen(i);
+        var q = program[i].start + program[i].time;
         if (q > t) t = q;
       }
       return t;
     }
-
-
-  function getprogramlen(i) {    
-    var rec = program[i];
-    return rec.time;
-    //return rec.time || ( rec.type == "shag" ? Math.ceil( rec.value ) : 1);
-  }
-
 
 ///////////////////
   function findkadetgroups( kdt ) {
@@ -66,8 +60,9 @@ Item {
   // цель = запись[,запись]
   // запись = число|имягруппы
   function getkadetsfromtarget( tgt ) {
-    var isInt = /^\+?\d+$/.test( tgt );
-    if (isInt) return [ parseInt(tgt) ];
+    if (start_ai[ tgt ]) return [tgt];
+    //var isInt = /^\+?\d+$/.test( tgt );
+    //if (isInt) return [ parseInt(tgt) ];
 
     if (stage.groups[tgt]) return flatten( getkadetsfromtarget( stage.groups[tgt] ) );
 
@@ -98,92 +93,68 @@ Item {
   
   function evalpos( time ) {
     var prg = stage.program;
-    var respos = arrayClone( kstartpos );
-    var respovorot = arrayClone( kstartpovorot );
+    var rai = JSON.parse(JSON.stringify( start_ai ));
          
     var tt = time;
+
     for (var q=0; q<prg.length; q++) {
         var rec = prg[q];
         if (rec.start > tt) continue;
 
         var kadets = getkadetsfromtarget( rec.target );
-        var rectime = getprogramlen( q );
-        var lefttime = rec.start + rectime < tt ? rectime : tt - rec.start;
-
-        //console.log(rec, lefttime, rectime );
+        var lefttime = rec.start + rec.time < tt ? rec.time : tt - rec.start;
         
-        if (rec.type == "shag") {          
+        if (rec.type == "shag") {
           for (var k=0; k<kadets.length; k++) {
-            var kadet = kadets[k] -1;
-            //console.log( "shag kadeta provort=",respovorot[kadet] );
-            var newx = respos[kadet][0] + rec.value * Math.cos( respovorot[kadet] * Math.PI / 180 ) * lefttime / rectime;
-            var newy = respos[kadet][1] + rec.value * Math.sin( respovorot[kadet] * Math.PI / 180 ) * lefttime / rectime;
-            respos[kadet][0] = newx;
-            respos[kadet][1] = newy;
+            var kadet_name = kadets[k];
+            var kadet = rai[ kadet_name ];
+            
+            var newx = kadet.pos[0] + rec.value * Math.cos( kadet.angle * Math.PI / 180 ) * lefttime / rec.time;
+            var newy = kadet.pos[1] + rec.value * Math.sin( kadet.angle * Math.PI / 180 ) * lefttime / rec.time;
+
+            kadet.pos = [newx, newy];
           }
         }
         else if (rec.type == "povorot") {          
           for (var k=0; k<kadets.length; k++) {
-            var kadet = kadets[k] -1;
-            //console.log("povorot kadeta na",rec.value ); // * lefttime / rectime);
-            if (rec.value == 1001) {              
-              respovorot[kadet] = respovorot[kadet] + (270- respovorot[kadet])* lefttime / rectime;
-              //console.log( "respovorot[kadet]===",respovorot[kadet]);
+            var kadet_name = kadets[k];
+            var kadet = rai[ kadet_name ];
+            if (!kadet) debugger;
+
+            if (rec.value == 1001) {
+              kadet.angle = kadet.angle + (270 - kadet.angle) * lefttime / rec.time;
             }
             else
-              respovorot[kadet] = respovorot[kadet] + rec.value * lefttime / rectime;
+              kadet.angle = kadet.angle + rec.value * lefttime / rec.time; 
           }
         }
         else if (rec.type == "rovno") {          
           for (var k=0; k<kadets.length; k++) {
-            var kadet = kadets[k] -1;
-            respos[kadet][0] = Math.round( respos[kadet][0]*2 )/2
-            respos[kadet][1] = Math.round( respos[kadet][1]*2 )/2
-            respovorot[kadet] = Math.round( respovorot[kadet] / 15) * 15
+            var kadet_name = kadets[k];
+            var kadet = rai[ kadet_name ];
+            kadet.pos[0] = Math.round( kadet.pos[0]*2 )/2;
+            kadet.pos[1] = Math.round( kadet.pos[1]*2 )/2;
+            kadet.angle = Math.round( kadet.angle / 15) * 15;
+          }
+        }
+        else if (rec.type == "color") {
+          for (var k=0; k<kadets.length; k++) {
+            var kadet_name = kadets[k];
+            var kadet = rai[ kadet_name ];
+            kadet.color = parsecolor( rec.value );
           }
         }
     }
 
-    return [respos, respovorot];
+    // console.log("evalpos rai=",rai );
+    return rai;
   }
 
-  property var kpos: []
-  property var kpovorot: []
-
-  property var keval: {
-    var r = evalpos( stage.time );
-    kpos = r[0];
-    kpovorot = r[1];
+  function parsecolor( col ) {
+    var s = col.split(/[,]/);
+    if (s.length >= 3)
+      return [ parseFloat( s[0] ), parseFloat( s[1] ), parseFloat( s[2] ) ];
+    return [1,0,0];
   }
-
-  property var finkpos: []
-  property var finkpovorot: []
-
-  property var finkeval: {
-    var r = evalpos( stage.timelen );
-    finkpos = r[0];
-    finkpovorot = r[1];
-  }
-
-
-  /////////////////////////////////
-
-function arrayClone( arr ) {
-
-    var i, copy;
-
-    if( Array.isArray( arr ) ) {
-        copy = arr.slice( 0 );
-        for( i = 0; i < copy.length; i++ ) {
-            copy[ i ] = arrayClone( copy[ i ] );
-        }
-        return copy;
-    } else if( typeof arr === 'object' ) {
-        throw 'Cannot clone array containing an object!';
-    } else {
-        return arr;
-    }
-
-}
 
 }

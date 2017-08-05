@@ -3,37 +3,25 @@ import components.creative_points 1.0
 Scene {
   id: film
 
-  property var total: 81
+  property var ai: { return {} }
 
-  property var kstartpos: {
-    var res = [];
+  function initai() {
+    var c=1;
     for (var i=0; i<9; i++)
-    for (var j=0; j<9; j++)
-      res.push( [j+1,i+1] );
-    return res;
+    for (var j=0; j<9; j++,c++) {
+      if (!ai[c]) ai[c] = {};
+      ai[c].pos = [j+1,i+1];
+      ai[c].color = [1,1,1];
+      ai[c].angle = 270;
+    }
   }
 
-  property var kcolors: {
-    var res = [];
-    for (var i=0; i<9; i++)
-    for (var j=0; j<9; j++)
-      if (i == 4 || j == 4)
-        res.push( [1,0,0] );
-      else
-        res.push( [1,1,1] );
-    return res;
-  }
-
-  property var kstartpovorot: {
-    var res = [];
-    for (var i=0; i<9; i++)
-    for (var j=0; j<9; j++)
-      res.push( 270 );
-    return res;
+  Item {
+    Component.onCompleted: film.initai();
   }
 
   ////////////////////////////////
-  RenderKadets2 {
+  RenderKadets3 {
     curstage: film.curstage
     id: sp
     onClicked: { kadet.value = index+1; console.log( (index+1) +"," ); }
@@ -72,51 +60,30 @@ Scene {
     property var animationStep: 0.1
   }
 
+/*
   Param {
     text: "Кадет"
-    min: 0
-    max: total
+    values: Object.keys( curstage.start_ai )
     id: kadet
-    property var val: value-1
-  }
-  Text {
-    property var tag: "left"
-    text: curstage.findkadetgroups( kadet.value ).join(",")
   }
 
+  Text {
+    property var tag: "left"
+    //text: curstage.findkadetgroups( kadet.value ).join(",")
+    text: kadet.value
+  }
+*/
+
+  /*
   Spheres {
     positions: sp.positions ? sp.positions.slice( kadet.val*3,kadet.val*3+3 ) : []
     colors: [1,1,0]
     radius: 2
     opacity: 0.5
-  }  
+  }
+  */
 
   ///////////////////////////////////
-
-  Stage {
-    id: stage
-    kstartpos: film.kstartpos
-    kstartpovorot: film.kstartpovorot
-    kcolors: film.kcolors
-
-    time: tparam.value-start
-    title: "Этап 1"
-  }
-
-  Stage {
-    id: stage2
-    property var prevstage: stage
-
-    start: prevstage.start + prevstage.timelen
-
-    kstartpos: prevstage.finkpos
-    kstartpovorot: prevstage.finkpovorot
-    kcolors: film.kcolors
-
-    time: tparam.value-start
-    title: "Этап 2"
-  }
-
 
   Item {
     id: stagesplace
@@ -127,12 +94,11 @@ Scene {
       Stage {
         property var prevstage: rep.$items[ index-1 ]
         start: prevstage ? prevstage.start + prevstage.timelen : 0
-        kstartpos: prevstage ? prevstage.finkpos : film.kstartpos
-        kstartpovorot: prevstage ? prevstage.finkpovorot : film.kstartpovorot
-        kcolors: film.kcolors
         time: tparam.value-start
-        title: thestages[index].title
 
+        start_ai: prevstage ? prevstage.final_ai: film.ai
+
+        title: thestages[index].title
         groups: thestages[index].groups
         program: thestages[index].program
       }
@@ -144,13 +110,16 @@ Scene {
     return stagesplace.children.slice( 0, -1 );
   }
 
-//  property var stages: [stage]
-
   property var curstage: {
     for (var i=0; i<stages.length; i++) 
       if (stages[i].start <= tparam.value && stages[i].start + stages[i].timelen >= tparam.value) return stages[i];
     
     return stages[ stages.length-1 ] || stage;
+  }
+
+  Stage {
+    id: stage
+    start_ai: film.ai
   }
 
   TextSprite {
@@ -224,6 +193,7 @@ Scene {
         }
     }
   }
+
 
   property var thestages: parse( txt.output )
 
@@ -299,10 +269,21 @@ Scene {
         accstage.program.push( rec );
       }
 
+      m = line.match(/(.+) цвет (.+)/);
+      if (m) {
+        var rec = { type: "color", target: m[1], value: m[2], time: 0, start: 0 };
+        accstage.program.push( rec );
+      }
+
     }
+    /*
+    if (res.length == 0) {
+      accstage = { title: m[1], program: [], groups: accstage.groups || {} };
+    }*/
+
     if (Object.keys(accstage).length > 0) res.push( accstage );
 
-    console.log( res);
+    console.log( "Stages parse res=",res);
 
     return res;
   }

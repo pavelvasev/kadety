@@ -50,7 +50,7 @@ CreativePoints {
         for (var i=0; i<pp.length; i+=3) {
 
           var ttt = [pp[i], pp[i+1], pp[i+2]];
-          var alfa = curstage.kpovorot[ i/3 ];
+          var alfa = curstage.ai [ i/3 ];
           ttt[0] = ttt[0] + Math.cos( alfa * Math.PI / 180 ) * r;
           ttt[2] = ttt[2] - Math.sin( alfa * Math.PI / 180 ) * r;
           res = res.concat(ttt);
