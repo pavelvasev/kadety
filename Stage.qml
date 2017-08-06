@@ -99,7 +99,11 @@ Item {
 
     for (var q=0; q<prg.length; q++) {
         var rec = prg[q];
-        if (rec.start > tt) continue;
+        if (rec.start > tt) {
+//          console.log("SKIP rec",rec,tt);
+          continue;
+        }
+        // console.log("PASS rec",rec,tt);
 
         var kadets = getkadetsfromtarget( rec.target );
         var lefttime = rec.start + rec.time < tt ? rec.time : tt - rec.start;
@@ -138,6 +142,7 @@ Item {
           }
         }
         else if (rec.type == "color") {
+          //console.log("setting color to kadets=",kadets);
           for (var k=0; k<kadets.length; k++) {
             var kadet_name = kadets[k];
             var kadet = rai[ kadet_name ];

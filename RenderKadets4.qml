@@ -36,15 +36,15 @@ Item {
       property var actor: curstage.ai[ actor_name ]
 
       positions: [0,0,0]
-      center: actorxyz( actor )
-      color: actor.color
+      center: actor ? actorxyz( actor ) : [0,0,0]
+      color: actor ? actor.color : [1,1,1]
 
       scale: 3
       
       positions: json.output ? json.output.vertices[0].values : []
       indices: json.output ? json.output.connectivity[0].indices : []
 
-      rotate: [ 0, (90+actor.angle) * Math.PI / 180,0]
+      rotate: actor ? [ 0, (90+actor.angle) * Math.PI / 180,0] : [0,0,0]
     }
 
   } // rep

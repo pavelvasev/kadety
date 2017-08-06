@@ -6,21 +6,6 @@ Scene {
   // словарь имя -> информация-об-актере
   property var ai: { return {} }
 
-  function initai() {
-    var c=1;
-    for (var i=0; i<9; i++)
-    for (var j=0; j<9; j++,c++) {
-      if (!ai[c]) ai[c] = {};
-      ai[c].pos = [j+1,i+1];
-      ai[c].color = [1,1,1];
-      ai[c].angle = 270;
-    }
-  }
-
-  Item {
-    Component.onCompleted: film.initai();
-  }
-
   ////////////////////////////////
   RenderKadets4 {
     curstage: film.curstage
@@ -122,7 +107,8 @@ Scene {
         start: prevstage ? prevstage.start + prevstage.timelen : 0
         time: tparam.value-start
 
-        start_ai: prevstage ? prevstage.final_ai: film.ai
+        start_ai: thestages[index].start_ai || (prevstage ? prevstage.final_ai: film.ai)
+        //start_ai: (prevstage ? prevstage.final_ai: film.ai)
 
         title: thestages[index].title
         groups: thestages[index].groups
@@ -223,23 +209,86 @@ Scene {
 
   property var thestages: parse( txt.output )
 
+  function split2(text, regex) {
+    var token, index, result = [];
+    while (text !== '') {
+        regex.lastIndex = 0;
+        token = regex.exec(text);
+        if (token === null) {
+            break;
+        }
+        index = token.index;
+        if (token[0].length === 0) {
+            index = 1;
+        }
+        result.push(text.substr(0, index));
+        result.push(token[0]);
+        index = index + token[0].length;
+        text = text.slice(index);
+    }
+    result.push(text);
+    return result;
+}
+
   function parse( txt ) {
-    var lines = txt.split("\n");
+    var blocks = split2( txt,/={3,}\s?([^\n]*)\n/);
+//    txt.split(/(?=(={3,} ([^\n]*)))/g);
     var accstage = {};
     var res = [];
+    //console.log("BBBBBBBBBBBBBBBBBBBBBBBB");
+    //console.log(blocks);
+
+    for (var i=0; i<blocks.length-1; i++) {
+      var line = blocks[i];
+      var m = line.match(/={3,}\s?(.+)/);
+      if (!m) continue;
+      var title = m[1];
+
+      var lang = "rus";
+      var m2 = title.match(/^(.+)\.(\w+)$/);
+      if (m2) {
+        title = m2[1];
+        lang = m2[2];
+      }
+
+      console.log(line," => ", title, lang );//, "code=",blocks[i+1]);
+      
+      if (lang == "rus")
+        res = parserus( blocks[i+1], title, res );
+      else if (lang == "js") {
+        res = parsejs( blocks[i+1], title, res );
+      }
+
+      i++;
+    }
+    console.log( "Stages parse res=",res);
+    return res;
+  }
+
+  function addstage( res ) {
+    var prevstage = res[ res.length-1 ] || {};
+    var accstage = { title: title, program: [], groups: prevstage.groups || {} };
+    res.push( accstage );
+    return accstage;
+  }
+
+  function parsejs( txt, title, res ) {
+    console.log("evalling js code=",txt);
+    eval( txt );
+    console.log("js evalled ok");
+    return res;
+  }
+
+  function parserus( txt, title, res ) {
+    var lines = txt.split("\n");
+    var prevstage = res[ res.length-1 ] || {};
+    var accstage = { title: title, program: [], groups: prevstage.groups || {} };
 
     for (var i=0; i<lines.length; i++ ) {
       var line = lines[i];
       console.log(line);
       var m = line.match(/#/);
       if (m) continue;
-
-      m = line.match(/={3,} (.+)/);
-      if (m) {
-        if (Object.keys(accstage).length > 0) res.push( accstage );
-        accstage = { title: m[1], program: [], groups: accstage.groups || {} };
-        continue;
-      }
 
       m = line.match(/(.+) = (.+)/);
       if (m) {
@@ -302,14 +351,8 @@ Scene {
       }
 
     }
-    /*
-    if (res.length == 0) {
-      accstage = { title: m[1], program: [], groups: accstage.groups || {} };
-    }*/
 
     if (Object.keys(accstage).length > 0) res.push( accstage );
-
-    console.log( "Stages parse res=",res);
 
     return res;
   }
