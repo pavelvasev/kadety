@@ -296,14 +296,14 @@ Scene {
         continue;
       }
 
-      m = line.match(/(.+) (с шага (\d+) (.+))/);
+      m = line.match(/(.+) (с шага (\d+) (.+)|(-) (.+))/);
 
       if (m) {
         var target = m[1];
-        var cmd = m[4];
-        var start = parseFloat( m[3] );
+        var cmd = m[6] || m[4];
+        var start = m[6] ? 1 : parseFloat( m[3] );
 
-        var m2 = cmd.match(/движение ((\d|\.)+)/);
+        var m2 = cmd.match(/движение ((\d|\.)+)|((\d|\.)+) шаг(а)? вперед/);
         if (m2) {
           var time = parseFloat(m2[1]);
           var rec = { type: "shag", start: start, value: time, target: target, time: time };
