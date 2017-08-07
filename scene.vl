@@ -39,6 +39,11 @@ Scene {
   }
   */
   
+  Text {
+    text: "Этапы"
+    property var tag: "left"
+  }
+
   ComboBox {
     property var tag: "left"
     size: 10
@@ -59,6 +64,11 @@ Scene {
     property var cc: film.curstage
     onCcChanged: stagecb.currentIndex = film.stages.indexOf( cc );
     id: stagecb
+  }
+
+  Text {
+    text: " "
+    property var tag: "left"
   }
 
   Param {
