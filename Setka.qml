@@ -30,7 +30,7 @@ Lines {
       res[i+2] *= -r;
     }
 
-    console.log(res);
+    //console.log(res);
     return res;
 
   }

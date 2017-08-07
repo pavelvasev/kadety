@@ -4,7 +4,7 @@ Scene {
   id: film
 
   // словарь имя -> информация-об-актере
-  property var ai: { return {} }
+  property var ai: invoke( "Состав" )
 
   ////////////////////////////////
   RenderKadets4 {
@@ -20,15 +20,17 @@ Scene {
     }
   }
 
+  
   /*
   Param {
-    text: "Шаги"
+    text: "Этапы"
     values: {
       r = [];
       for (var i=0; i<stages.length; i++) {
-        r.push( " === " + stages[i].title );
+        r.push( " === " + stages[i].title );        
         for (var j=1; j<=stages[i].timelen; j++)
           r.push( "  шаг "+j );
+        
       }
       return r;  
     }
@@ -36,6 +38,28 @@ Scene {
     onValueChanged: tparam.value = 	value
   }
   */
+  
+  ComboBox {
+    property var tag: "left"
+    size: 10
+    height: 200
+    width: 200
+    model: {
+      var r = [];
+      for (var i=0; i<stages.length; i++)
+        r.push( stages[i].title );
+      return r;
+    }
+    onCurrentIndexChanged: {
+      // console.log( currentIndex );
+      var s = stages[ currentIndex ];
+      if (s) tparam.value = s.start + 0.000001;
+    }
+
+    property var cc: film.curstage
+    onCcChanged: stagecb.currentIndex = film.stages.indexOf( cc );
+    id: stagecb
+  }
 
   Param {
     text: "Время"
@@ -47,7 +71,8 @@ Scene {
       return r;
       }
     id: tparam
-    step: 0.05
+    //step: 0.05
+    step: 1
     enableSliding: true
     property var animationPriority: 1
     property var animationStep: 0.1
@@ -136,10 +161,11 @@ Scene {
 
   TextSprite {
     //centered: true
+    texSize: [512,512]
     texOffset: [-0.25, 0.25]
     center: [25,20,-25]
     text: curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) )
-    radius: 30
+    radius: 60
   }
 
   text: ""
@@ -207,7 +233,30 @@ Scene {
   }
 
 
-  property var thestages: parse( txt.output )
+  property var parts: parse( txt.output )
+  property var thestages: invoke("Сценарий")
+
+  function invoke( name ) {
+     console.log("~~~~~~~ вызов участка name=",name );
+     var code = parts[ name ];
+     if (!code) {
+       console.log("!!!! нет кода для участка name=",name);
+       return "";
+     }
+
+     if (code.lang == "rus")
+       return evalrus( code.text );
+     else if (code.lang == "js")
+       return evaljs( code.text );
+     else if (code.lang == "сетка")
+       return evalsetka( code.text );
+     else if (code.lang == "json" )
+       return evaljson( code.text );
+     else
+       console.log("!!!!!!! неизвестный язык lang=",code.lang," для участка name=",name );
+
+     return "";
+  }
 
   function split2(text, regex) {
     var token, index, result = [];
@@ -228,19 +277,16 @@ Scene {
     }
     result.push(text);
     return result;
-}
+  }
 
   function parse( txt ) {
-    var blocks = split2( txt,/={3,}\s?([^\n]*)\n/);
-//    txt.split(/(?=(={3,} ([^\n]*)))/g);
+    var blocks = split2( txt,/~{3,}\s?([^\n]*)\n/);
     var accstage = {};
-    var res = [];
-    //console.log("BBBBBBBBBBBBBBBBBBBBBBBB");
-    //console.log(blocks);
+    var res = {};
 
     for (var i=0; i<blocks.length-1; i++) {
       var line = blocks[i];
-      var m = line.match(/={3,}\s?(.+)/);
+      var m = line.match(/~{3,}\s?(.+)/);
       if (!m) continue;
       var title = m[1];
 
@@ -251,17 +297,12 @@ Scene {
         lang = m2[2];
       }
 
-      console.log(line," => ", title, lang );//, "code=",blocks[i+1]);
-      
-      if (lang == "rus")
-        res = parserus( blocks[i+1], title, res );
-      else if (lang == "js") {
-        res = parsejs( blocks[i+1], title, res );
-      }
+      var record = { lang: lang, text: blocks[i+1] }
+      res[ title ] = record;
 
       i++;
     }
-    console.log( "Stages parse res=",res);
+    console.log( "Parts parse res=",res);
     return res;
   }
 
@@ -272,23 +313,33 @@ Scene {
     return accstage;
   }
 
-  function parsejs( txt, title, res ) {
-    console.log("evalling js code=",txt);
-    eval( txt );
-    console.log("js evalled ok");
-    return res;
+  function evaljs( txt, title, res ) {
+    var result = new Function( txt )();
+    return result;
+    //return eval( txt );
   }
 
-  function parserus( txt, title, res ) {
+  function evalrus( txt ) {
     var lines = txt.split("\n");
-    var prevstage = res[ res.length-1 ] || {};
-    var accstage = { title: title, program: [], groups: prevstage.groups || {} };
+    var accstage = {};
+    var res = [];
 
     for (var i=0; i<lines.length; i++ ) {
-      var line = lines[i];
+      var line = lines[i].trim();
+
       console.log(line);
+
+      if (line.length == 0) continue;
+
       var m = line.match(/#/);
       if (m) continue;
+
+      m = line.match(/={3,} (.+)/);
+      if (m) {
+        if (Object.keys(accstage).length > 0) res.push( accstage );
+        accstage = { title: m[1], program: [], groups: accstage.groups || {} };
+        continue;
+      }
 
       m = line.match(/(.+) = (.+)/);
       if (m) {
@@ -296,7 +347,7 @@ Scene {
         continue;
       }
 
-      m = line.match(/(.+) (с шага (\d+) (.+)|(-) (.+))/);
+      m = line.match(/(.+) (с шага (\d+) (.+)|(-|\u2013) (.+))/);
 
       if (m) {
         var target = m[1];
@@ -305,7 +356,9 @@ Scene {
 
         var m2 = cmd.match(/движение ((\d|\.)+)|((\d|\.)+) шаг(а)? вперед/);
         if (m2) {
-          var time = parseFloat(m2[1]);
+          var time = parseFloat(m2[3] || m2[1]);
+          if (isNaN( time )) 
+            console.error( "ошибка парсинка строки, time=NaN",line,"m2=",m2);
           var rec = { type: "shag", start: start, value: time, target: target, time: time };
           accstage.program.push( rec );
         }
@@ -342,20 +395,28 @@ Scene {
         var st = last ? last.start + last.time : 0
         var rec = { type: "pause", target: "", value: 0, time: parseFloat( m[1] || "10" ), start: st };
         accstage.program.push( rec );
+        continue;
       }
 
       m = line.match(/(.+) цвет (.+)/);
       if (m) {
         var rec = { type: "color", target: m[1], value: m[2], time: 0, start: 0 };
         accstage.program.push( rec );
+        continue;
       }
+
+      console.error("СТРОКА НЕ ПОНЯТА!");
 
     }
 
     if (Object.keys(accstage).length > 0) res.push( accstage );
 
+    console.log( "Stages parse res=",res);
+
     return res;
   }
+
+  ////////////////////////////////////////////
 
   Setka {
     nx: 9

@@ -21,8 +21,6 @@ Item {
   property var final_ai: evalpos( stage.timelen );
   property var ai: evalpos( stage.time );
 
-  
-
   ////////////////////////////////
 
   function process() {
@@ -56,13 +54,18 @@ Item {
     return res;
   }
 
+  function uniq(a) {
+    var seen = {};
+    return a.filter(function(item) {
+        return seen.hasOwnProperty(item) ? false : (seen[item] = true);
+    });
+  }
+
   // выдать список актеров по цели
   // цель = запись[,запись]
   // запись = число|имягруппы
   function getkadetsfromtarget( tgt ) {
     if (start_ai[ tgt ]) return [tgt];
-    //var isInt = /^\+?\d+$/.test( tgt );
-    //if (isInt) return [ parseInt(tgt) ];
 
     if (stage.groups[tgt]) return flatten( getkadetsfromtarget( stage.groups[tgt] ) );
 
@@ -78,7 +81,7 @@ Item {
     // если не содержит запятых, и не целое число -- значит должна быть запись о группе
     if (sp.length > 1) {
       var res = sp.map( function(v) { return getkadetsfromtarget(v); } );
-      return flatten( res );
+      return uniq( flatten( res ) );
     }
 
     return [];
