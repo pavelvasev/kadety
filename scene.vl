@@ -3,6 +3,8 @@ import components.creative_points 1.0
 Scene {
   id: film
 
+  // backgroundColor: 0xdddddd
+
   // словарь имя -> информация-об-актере
   property var ai: invoke( "Состав" )
 
@@ -213,6 +215,15 @@ Scene {
     texSize: [512,512]
     texOffset: [-0.25, 0.25]
     center: [25,20,-25]
+    text: "Екатеринбургский Кадетский корпус"
+    radius: 60
+  }
+
+  TextSprite {
+    //centered: true
+    texSize: [512,512]
+    texOffset: [-0.25, 0.25]
+    center: [0,-10,25]
     text: curstage.title + " Шаг " + Math.floor( (tparam.value - curstage.start) )
     radius: 60
   }
