@@ -2,7 +2,7 @@ Item {
   id: item
 
   SceneMouseEvents {
-    onDoubleClicked: {
+    onClicked: {
       for (var i=0; i<rep.$items.length; i++) {
         var sp = rep.$items[i];
         var r = sp.intersect( sceneMouse, 2 );

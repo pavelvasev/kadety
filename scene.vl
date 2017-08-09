@@ -12,11 +12,27 @@ Scene {
     id: arender
     onClicked: { 
       if (!tkadet.value) tkadet.value="";
+
+      var arr = tkadet.value.split(/[, ]+/);
+      if (arr.indexOf( index ) >= 0) {
+        var filteredAry = arr.filter(function(e) { return e !== index });
+        tkadet.value = filteredAry.join(",");
+        return;
+      }      
+      
+      /*
+      var pattern = "\\s*"+index+",?\\s*";
+      var re = new RegExp(pattern);
+      if (tkadet.value.match( re )) {
+        tkadet.value = tkadet.value.replace( re,"" ).replace(/,,/g,",");
+        return;
+      }
+      */      
+
       if (tkadet.value.length > 0)
-        tkadet.value = tkadet.value + ","
+        tkadet.value = (tkadet.value + ",").replace(",,",",")
+
       tkadet.value = tkadet.value + index;
-      //console.log( (index) +"," ); 
-      //kadet.value = index+1; console.log( (index+1) +"," ); 
     }
   }
 
