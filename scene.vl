@@ -481,17 +481,21 @@ Scene {
 
   Button {
     width: 200
-    text: film.driverControls.movieDialog.processActive ? "СТОП" : "МАРШ С МУЗЫКОЙ"
+    text: film.driverControls.movieDialog.processActive ? "СТОЙ" : "МАРШ-МАРШ"
     property var tag: "left"
     onClicked: {
       if (film.driverControls.movieDialog.processActive) {
         film.driverControls.movieDialog.stop();
-        marsh.htmlTag.pause();
+
+        if (cbmusic.checked) 
+          marsh.htmlTag.pause();
       }
       else {
-        marsh.htmlTag.pause();
-        marsh.htmlTag.currentTime = 19.7 + tparam.value;
-        marsh.htmlTag.play();
+        if (cbmusic.checked) {
+          marsh.htmlTag.pause();
+          marsh.htmlTag.currentTime = 19.7 + tparam.value;
+          marsh.htmlTag.play();
+        }
 
         var tm = tparam.value;
         film.driverControls.movieDialog.prepare();
@@ -499,5 +503,10 @@ Scene {
         tparam.value = tm;
       }
     }
+  }
+  CheckBoxParam {
+    text: "с музыкой"
+    id: cbmusic
+    checked: true
   }
 }
