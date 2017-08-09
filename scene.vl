@@ -56,9 +56,12 @@ Scene {
       return r;
     }
     onCurrentIndexChanged: {
-      // console.log( currentIndex );
+      //console.log( "etapi currentIndex changed..",currentIndex );
       var s = stages[ currentIndex ];
-      if (s) tparam.value = s.start + 0.000001;
+      if (s && s != film.curstage) {
+        console.log( "setting time param to ",s.start + 0.000001);
+        tparam.value = s.start + 0.000001;
+      }
     }
 
     property var cc: film.curstage
@@ -78,6 +81,7 @@ Scene {
       r=0;
       for (var i=0; i<stages.length; i++) 
         r += stages[i].timelen;
+      //if (r < 1) return 1000;
       return r;
       }
     id: tparam
@@ -159,7 +163,7 @@ Scene {
 
   property var curstage: {
     for (var i=0; i<stages.length; i++) 
-      if (stages[i].start <= tparam.value && stages[i].start + stages[i].timelen >= tparam.value) return stages[i];
+      if (stages[i].start <= tparam.value && stages[i].start + stages[i].timelen > tparam.value) return stages[i];
     
     return stages[ stages.length-1 ] || stage;
   }
@@ -258,7 +262,7 @@ Scene {
        return evalrus( code.text );
      else if (code.lang == "js")
        return evaljs( code.text );
-     else if (code.lang == "сетка")
+     else if (code.lang == "setka")
        return evalsetka( code.text );
      else if (code.lang == "json" )
        return evaljson( code.text );
@@ -327,6 +331,23 @@ Scene {
     var result = new Function( txt )();
     return result;
     //return eval( txt );
+  }
+
+  function evalsetka( txt ) {
+    var lines = txt.split("\n");
+    var ai = {};
+    for (var i=0; i<lines.length; i++ ) {
+      var line = lines[i].trim();
+      var pos = line.split(",");
+      for (var j=0; j<pos.length; j++) {
+        var recname = pos[j].trim();
+        if (recname) {
+          var rec = { pos: [j+1, lines.length -i -1 -2], angle: 270 }
+          ai[ recname ] = rec;
+        }
+      }
+    }
+    return ai;
   }
 
   function evalrus( txt ) {
@@ -415,8 +436,16 @@ Scene {
         continue;
       }
 
-      console.error("СТРОКА НЕ ПОНЯТА!");
+      m = line.match(/встать (.+)/);
+      if (m) {
+        var r = invoke( m[1] );
+        if (r) {
+          accstage.start_ai = r;
+          continue;
+        }
+      }
 
+      console.error("СТРОКА НЕ ПОНЯТА!");
     }
 
     if (Object.keys(accstage).length > 0) res.push( accstage );

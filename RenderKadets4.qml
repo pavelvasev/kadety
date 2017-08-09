@@ -5,7 +5,7 @@ Item {
     onDoubleClicked: {
       for (var i=0; i<rep.$items.length; i++) {
         var sp = rep.$items[i];
-        var r = sp.intersect( sceneMouse, 1 );
+        var r = sp.intersect( sceneMouse, 2 );
         if (r) {
           item.clicked( sp.actor_name );
           break;
