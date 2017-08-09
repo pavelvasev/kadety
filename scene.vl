@@ -490,11 +490,13 @@ Scene {
       }
       else {
         marsh.htmlTag.pause();
-        marsh.htmlTag.currentTime = 19.7;
+        marsh.htmlTag.currentTime = 19.7 + tparam.value;
         marsh.htmlTag.play();
 
+        var tm = tparam.value;
         film.driverControls.movieDialog.prepare();
         film.driverControls.movieDialog.gogo();
+        tparam.value = tm;
       }
     }
   }
