@@ -36,6 +36,9 @@ Scene {
     }
   }
 
+  RenderNears {
+    curstage: film.curstage  
+  }
   
   /*
   Param {
@@ -405,7 +408,7 @@ Scene {
         if (m2) {
           var time = parseFloat(m2[3] || m2[1]);
           if (isNaN( time )) 
-            console.error( "ошибка парсинка строки, time=NaN",line,"m2=",m2);
+            console.error( "ошибка парсинга строки, time=NaN",line,"m2=",m2);
           var rec = { type: "shag", start: start, value: time, target: target, time: time };
           accstage.program.push( rec );
         }
