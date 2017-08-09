@@ -122,6 +122,17 @@ Item {
             kadet.pos = [newx, newy];
           }
         }
+        if (rec.type == "sdvig") {
+          for (var k=0; k<kadets.length; k++) {
+            var kadet_name = kadets[k];
+            var kadet = rai[ kadet_name ];
+            
+            var newx = kadet.pos[0] + rec.value * Math.cos( (kadet.angle+90) * Math.PI / 180 ) * lefttime / rec.time;
+            var newy = kadet.pos[1] + rec.value * Math.sin( (kadet.angle+90) * Math.PI / 180 ) * lefttime / rec.time;
+
+            kadet.pos = [newx, newy];
+          }
+        }
         else if (rec.type == "povorot") {          
           for (var k=0; k<kadets.length; k++) {
             var kadet_name = kadets[k];
