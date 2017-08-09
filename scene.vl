@@ -111,7 +111,23 @@ Scene {
     property var animationStep: 0.1
   }
 
+  Row {
+    property var tag: "left"
+    Button {
+      text: "<<"
+      onClicked: tparam.value = tparam.value-1;
+    }
+    Button {
+      text: ">>"
+      onClicked: tparam.value = tparam.value+1;
+    }
+  }
 
+
+  Text {
+    text: " "
+    property var tag: "left"
+  }
   TextParam {
     text: "Кадеты"
     id: tkadet
