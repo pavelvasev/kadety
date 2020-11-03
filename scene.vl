@@ -525,7 +525,7 @@ Scene {
   }
 
   Audio {
-    src: Qt.resolvedUrl("kadet-marsh-minus.mp3")
+    src: Qt.resolvedUrl("kadet-marsh-minus.mp3") + "?raw=true"; // ?raw=true is for github serving
     property var tag: "left"
     width: 200
     id: marsh
